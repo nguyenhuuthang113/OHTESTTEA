@@ -30,7 +30,7 @@ async function fetchExistingData() {
 // Thêm sản phẩm mới và lưu vào GitHub
 async function addProductAndSave() {
     const existingData = await fetchExistingData();
-    existingData.products.push(newProduct);
+    existingData.push(newProduct); // Thay đổi này đã được chỉnh sửa
     const updatedContent = JSON.stringify(existingData, null, 2);
     const base64Content = btoa(updatedContent);
 
