@@ -3,8 +3,7 @@ const repoOwner = 'nguyenhuuthang113';
 const repoName = 'OHTESTTEA';
 const filePath = 'products.json';
 
-const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
-
+// Dữ liệu sản phẩm mới
 const newProduct = {
     name: "New Product",
     description: "Description for the new product.",
@@ -15,25 +14,42 @@ const newProduct = {
     imageURL: "link-to-new-product-image"
 };
 
-const base64Content = btoa(JSON.stringify(newProduct));
-
-const requestOptions = {
-    method: 'PUT',
-    headers: {
-        'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-        message: "Add new product",
-        content: base64Content,
-        sha: 'null'
-    })
-};
-
-fetch(apiUrl, requestOptions)
-    .then(response => response.json())
-    .then(data => {
-        console.log("Product added:", data);
-    })
-    .catch(error => {
-        console.error("Error:", error);
+// Lấy dữ liệu hiện có từ GitHub
+async function fetchExistingData() {
+    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+    const response = await fetch(apiUrl, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
     });
+    const data = await response.json();
+    const existingData = JSON.parse(atob(data.content));
+    return existingData;
+}
+
+// Thêm sản phẩm mới và lưu vào GitHub
+async function addProductAndSave() {
+    const existingData = await fetchExistingData();
+    existingData.products.push(newProduct);
+    const updatedContent = JSON.stringify(existingData, null, 2);
+    const base64Content = btoa(updatedContent);
+
+    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+    const requestOptions = {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            message: "Add new product",
+            content: base64Content,
+            sha: data.sha // Lấy từ phản hồi khi lấy dữ liệu hiện có
+        })
+    };
+
+    const response = await fetch(apiUrl, requestOptions);
+    const responseData = await response.json();
+    console.log("Product added:", responseData);
+}
+
+addProductAndSave();
