@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+</head>
+<body>
+    <h1>Add New Product</h1>
+    <form id="upload-form">
+        <label for="name">Product Name:</label>
+        <input type="text" id="name" name="name" required><br>
+        <label for="image">Product Image:</label>
+        <input type="file" id="image" name="image" accept="image/*" required><br>
+        <label for="description">Product Description:</label>
+        <textarea id="description" name="description" rows="4"></textarea><br>
+        <label for="priceM">Price (Size M):</label>
+        <input type="text" id="priceM" name="priceM"><br>
+        <label for="priceL">Price (Size L):</label>
+        <input type="text" id="priceL" name="priceL"><br>
+        <button type="submit">Add Product</button>
+    </form>
+
+    <h1>Delete Product</h1>
+    <form id="delete-form">
+        <label for="deleteName">Product Name:</label>
+        <input type="text" id="deleteName" name="deleteName" required><br>
+        <button type="submit">Delete Product</button>
+    </form>
+
+    <script>
+        const productsUrl = 'https://raw.githubusercontent.com/nguyenhuuthang113/OHTESTTEA/main/products.json';
+
+        const uploadForm = document.getElementById('upload-form');
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(uploadForm);
+
+            const productData = {
+                name: formData.get('name'),
+                description: formData.get('description'),
+                price: {
+                    M: formData.get('priceM'),
+                    L: formData.get('priceL'),
+                },
+                imageURL: '' // Will be set after uploading the image
+            };
+
+            try {
+                const imageFile = formData.get('image');
+                const imageUrl = await uploadImage(imageFile);
+
+                productData.imageURL = imageUrl;
+
+                await updateProductData(productData);
+                alert('Product added successfully!');
+                uploadForm.reset();
+            } catch (error) {
+                console.error('Error adding product:', error);
+            }
+        });
+
+        const deleteForm = document.getElementById('delete-form');
+        deleteForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const deleteName = deleteForm.deleteName.value.trim().toLowerCase();
+
+            try {
+                const response = await fetch(productsUrl);
+                const existingData = await response.json();
+                const updatedData = existingData.filter(product => product.name.toLowerCase() !== deleteName);
+
+                if (existingData.length === updatedData.length) {
+                    throw new Error('Product not found.');
+                }
+
+                await fetch(productsUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                alert('Product deleted successfully!');
+                deleteForm.reset();
+            } catch (error) {
+                console.error('Error deleting product:', error);
+            }
+        });
+
+        async function uploadImage(imageFile) {
+            const imageUploadUrl = 'https://api.imgur.com/3/image';
+            const apiKey = 'Client-ID 84f652f4b8b0d70'; // Replace with your Imgur API key
+
+            const formData = new FormData();
+            formData.append('image', imageFile);
+
+            const response = await fetch(imageUploadUrl, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Client-ID ${apiKey}`
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                return result.data.link;
+            } else {
+                throw new Error('Image upload failed');
+            }
+        }
+
+        async function updateProductData(productData) {
+            const response = await fetch(productsUrl);
+            const existingData = await response.json();
+
+            existingData.push(productData);
+
+            await fetch(productsUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(existingData)
+            });
+        }
+    </script>
+</body>
+</html>
