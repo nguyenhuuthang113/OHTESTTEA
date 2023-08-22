@@ -44,8 +44,12 @@
                     M: formData.get('priceM'),
                     L: formData.get('priceL'),
                 },
-                imageURL: '' // Will be set after uploading the image
+                imageURL: ''
             };
+
+            const loadingMessage = document.createElement('p');
+            loadingMessage.textContent = 'Uploading image and adding product...';
+            document.body.appendChild(loadingMessage);
 
             try {
                 const imageFile = formData.get('image');
@@ -55,44 +59,20 @@
 
                 await updateProductData(productData);
                 alert('Product added successfully!');
+                loadingMessage.remove();
                 uploadForm.reset();
             } catch (error) {
                 console.error('Error adding product:', error);
+                alert('Failed to add product. Please check the console for details.');
+                loadingMessage.remove();
             }
         });
 
-        const deleteForm = document.getElementById('delete-form');
-        deleteForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const deleteName = deleteForm.deleteName.value.trim().toLowerCase();
-
-            try {
-                const response = await fetch(productsUrl);
-                const existingData = await response.json();
-                const updatedData = existingData.filter(product => product.name.toLowerCase() !== deleteName);
-
-                if (existingData.length === updatedData.length) {
-                    throw new Error('Product not found.');
-                }
-
-                await fetch(productsUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedData)
-                });
-
-                alert('Product deleted successfully!');
-                deleteForm.reset();
-            } catch (error) {
-                console.error('Error deleting product:', error);
-            }
-        });
+        // ... (your other code)
 
         async function uploadImage(imageFile) {
             const imageUploadUrl = 'https://api.imgur.com/3/image';
-            const apiKey = 'Client-ID 84f652f4b8b0d70'; // Replace with your Imgur API key
+            const apiKey = '84f652f4b8b0d70'; // Replace with your Imgur API key
 
             const formData = new FormData();
             formData.append('image', imageFile);
@@ -130,3 +110,4 @@
     </script>
 </body>
 </html>
+
