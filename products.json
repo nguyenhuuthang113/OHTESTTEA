@@ -1,0 +1,39 @@
+const token = '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';
+const repoOwner = 'nguyenhuuthang113';
+const repoName = 'OHTESTTEA';
+const filePath = 'products.json';
+
+const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+
+const newProduct = {
+    name: "New Product",
+    description: "Description for the new product.",
+    price: {
+        M: "20.00",
+        L: "25.00"
+    },
+    imageURL: "link-to-new-product-image"
+};
+
+const base64Content = btoa(JSON.stringify(newProduct));
+
+const requestOptions = {
+    method: 'PUT',
+    headers: {
+        'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+        message: "Add new product",
+        content: base64Content,
+        sha: 'null'
+    })
+};
+
+fetch(apiUrl, requestOptions)
+    .then(response => response.json())
+    .then(data => {
+        console.log("Product added:", data);
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
